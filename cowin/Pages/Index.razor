@@ -14,7 +14,7 @@
                         <MudAutocomplete T="District" Variant="Variant.Outlined" Label="Districts" @bind-Value="SelectedDistrict" SearchFunc="@SearchDistricts" ToStringFunc="@(e=> e==null?null : $"{e.district_name}")" MaxItems="50" />
                     </MudItem>
                     <MudItem xs="12" md="3">
-                        <MudDatePicker Disabled Editable=false DateFormat="dd/MM/yyyy" InputVariant="Variant.Outlined" Label="Date" @bind-Date="date" />
+                        <MudDatePicker DateFormat="dd/MM/yyyy" InputVariant="Variant.Outlined" Label="Date" @bind-Date="date" />
                     </MudItem>
                     <MudItem Style="align-self:center" xs="12" md="3">
                         <div class="justify-center mud-text-align-center">
@@ -72,7 +72,7 @@
                 <MudCardHeader>
                     <CardHeaderContent>
                         <MudText Typo="Typo.h6">@center.name</MudText>
-                        <MudText Typo="Typo.caption">@center.address, @center.block_name, @center.district_name, @center.state_name - @center.pincode</MudText>
+                        <MudText Typo="Typo.caption"><MudIcon Icon="@Icons.Filled.LocationOn" Size="Size.Small"></MudIcon>@center.address, @center.block_name, @center.district_name, @center.state_name - @center.pincode</MudText>
                         
                     </CardHeaderContent>
                 </MudCardHeader>
@@ -81,7 +81,10 @@
                         <MudItem xs="12" md="12">
                             @foreach (var session in center.sessions.Where(s => s.available_capacity > 0))
                             {
-                                <MudText Typo="Typo.body1">@session.available_capacity @session.vaccine Vaccines Available on @session.date. (Min. Age : @session.min_age_limit)</MudText>
+                            <MudText Typo="Typo.body1">
+                                @session.available_capacity @session.vaccine Vaccines Available.
+                                <MudChip Label="true" Color="Color.Surface"> <MudIcon Icon="@Icons.Filled.AccountBox" Size="Size.Small"></MudIcon> Min. Age : @session.min_age_limit+</MudChip>
+                            </MudText>
                             }
                         </MudItem>
                         <div style="margin:10px">

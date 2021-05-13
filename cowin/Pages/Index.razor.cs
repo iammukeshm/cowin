@@ -46,6 +46,7 @@ namespace cowin.Pages
         }
         private async Task<IEnumerable<State>> SearchStates(string value)
         {
+            await ResetAsync();
             if (string.IsNullOrEmpty(value))
                 return States;
             return States.Where(x => x.state_name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
@@ -81,9 +82,9 @@ namespace cowin.Pages
         }
         private async Task SearchForAvailableVaccinesAsync()
         {
-            if(this.SelectedState.state_id == 0)
+            if (this.SelectedState.state_id == 0)
             {
-                _snackBar.Add("Select a State",Severity.Error);
+                _snackBar.Add("Select a State", Severity.Error);
                 return;
             }
             if (this.SelectedDistrict.district_id == 0)
@@ -91,51 +92,70 @@ namespace cowin.Pages
                 _snackBar.Add("Select a District", Severity.Error);
                 return;
             }
-            await FetchPublicReport(SelectedState.state_id, SelectedDistrict.district_id);
-            var appointmentEndpoint = $"api/v2/appointment/sessions/public/calendarByDistrict?district_id={SelectedDistrict.district_id}&date={DateTime.Now.Date.ToString("dd/MM/yyyy")}";
-            var response = await _httpClient.GetAsync(appointmentEndpoint);
-            if (response.IsSuccessStatusCode)
+            if (date < DateTime.Now.Date)
             {
-                var data = await response.Deserialize<CalendarByDistrictEndpointResponse>();               
-                if(data.centers.Count == 0)
+                _snackBar.Add("Please select Today or Later dates");
+                searchingCompleted = false;
+                Centers.Clear();
+            }
+            else
+            {
+                await FetchPublicReport(SelectedState.state_id, SelectedDistrict.district_id);
+                string customDate = date.HasValue ? date.Value.ToString("dd-MM-yyyy") : string.Empty;
+                var appointmentEndpoint = $"api/v2/appointment/sessions/public/calendarByDistrict?district_id={SelectedDistrict.district_id}&date={customDate}";
+                var response = await _httpClient.GetAsync(appointmentEndpoint);
+                if (response.IsSuccessStatusCode)
                 {
-                    _snackBar.Add("No Centers Found");
-                }
-                else
-                {
-                    var allCentres = data.centers.Count;
-                    var temp = data.centers;
-                    temp.RemoveAll(a => a.sessions.Any(a => a.available_capacity == 0));
-                    if (temp.Count == 0)
+                    var data = await response.Deserialize<CalendarByDistrictEndpointResponse>();
+                    if (data.centers.Count == 0)
                     {
-                        centersFound = allCentres;
-                        vaccinationSlotAvailable = false;
+                        _snackBar.Add("No Centers Found");
+                        searchingCompleted = false;
+                        Centers.Clear();
                     }
                     else
                     {
-                        centersFound = temp.Count;
-                        vaccinationSlotAvailable = true;
+                        var allCentres = data.centers.Count;
+                        var temp = data.centers;
+                        //temp.RemoveAll(a => a.sessions.Any(a => a.available_capacity == 0));
+                        foreach (Center center in temp.ToList())
+                        {
+                            center.sessions.RemoveAll(x => !(x.date.Equals(customDate)));
+                            if (center.sessions.Sum(a => a.available_capacity) == 0)
+                                temp.Remove(center);
+                        }
+                        if (temp.Count == 0)
+                        {
+                            centersFound = allCentres;
+                            vaccinationSlotAvailable = false;
+                        }
+                        else
+                        {
+                            centersFound = temp.Count;
+                            vaccinationSlotAvailable = true;
+                        }
+
+                        Centers = temp;
+                        searchingCompleted = true;
                     }
-                   
-                    Centers = temp;
-                    searchingCompleted = true;
                 }
             }
         }
         public Color GetFeeChipColor(string feeType)
         {
-            if (feeType == "Free") return Color.Success;
-            else return Color.Error;
+            if (feeType == "Free") { return Color.Success; }
+            else if (feeType == "Paid") { return Color.Error; }
+            else { return Color.Error; }
         }
         public async Task FetchPublicReport(int stateId = 0, int districtId = 0)
         {
-            var publicReportEndpoint = $"api/v1/reports/v2/getPublicReports?state_id={(stateId > 0 ? stateId : string.Empty)}&district_id={(districtId > 0 ? districtId : string.Empty)}&date=";
-            var response = await _httpClient.GetAsync(publicReportEndpoint);
-            if (response.IsSuccessStatusCode)
-            {
-                var data = await response.Deserialize<PublicReportEndpointResponse>();
-                PublicReportData = data.topBlock;
-            }
+                var publicReportEndpoint = $"api/v1/reports/v2/getPublicReports?state_id={(stateId > 0 ? stateId : string.Empty)}&district_id={(districtId > 0 ? districtId : string.Empty)}&date=";
+                var response = await _httpClient.GetAsync(publicReportEndpoint);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Deserialize<PublicReportEndpointResponse>();
+                    PublicReportData = data.topBlock;
+                }
         }
     }
 }
