@@ -73,21 +73,22 @@
                     <CardHeaderContent>
                         <MudText Typo="Typo.h6">@center.name</MudText>
                         <MudText Typo="Typo.caption">@center.address, @center.block_name, @center.district_name, @center.state_name - @center.pincode</MudText>
+                        
                     </CardHeaderContent>
                 </MudCardHeader>
-                <MudCardContent>
+                <MudCardContent Style="padding-top:0px!important">
                     <MudGrid>
                         <MudItem xs="12" md="12">
                             @foreach (var session in center.sessions.Where(s => s.available_capacity > 0))
                             {
                                 <MudText Typo="Typo.body1">@session.available_capacity @session.vaccine Vaccines Available on @session.date. (Min. Age : @session.min_age_limit)</MudText>
                             }
-                        <div style="margin-top:10px">
-                            <MudChip Label="true" Color="GetFeeChipColor(center.fee_type)"> <MudIcon Icon="@Icons.Filled.AttachMoney" Size="Size.Small"></MudIcon> @center.fee_type</MudChip>
-                            <MudChip Label="true" Color="Color.Info">@center.sessions.Sum(a => a.available_capacity) Vaccines Available</MudChip>
-                        </div>
-                           
                         </MudItem>
+                        <div style="margin:10px">
+                            <MudChip Label="true" Color="GetFeeChipColor(center.fee_type)"> <MudIcon Icon="@Icons.Filled.AttachMoney" Size="Size.Small"></MudIcon> @center.fee_type</MudChip>
+                            <MudChip Label="true" Color="Color.Surface" IconColor="Color.Secondary"><MudIcon Icon="@Icons.Filled.Timer" Size="Size.Small"></MudIcon> @center.from - @center.to</MudChip>
+                            <MudChip Label="true" Color="Color.Surface"> <MudIcon Icon="@Icons.Filled.LocalHospital" Size="Size.Small"></MudIcon> @center.sessions.Sum(a => a.available_capacity) Vaccines Available</MudChip>
+                        </div>
                     </MudGrid>
                 </MudCardContent>
             </MudCard>

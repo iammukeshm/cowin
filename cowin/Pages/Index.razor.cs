@@ -103,11 +103,20 @@ namespace cowin.Pages
                 }
                 else
                 {
-                    centersFound = data.centers.Count;
+                    var allCentres = data.centers.Count;
                     var temp = data.centers;
                     temp.RemoveAll(a => a.sessions.Any(a => a.available_capacity == 0));
-                    if (temp.Count == 0) vaccinationSlotAvailable = false;
-                    else vaccinationSlotAvailable = true;                    
+                    if (temp.Count == 0)
+                    {
+                        centersFound = allCentres;
+                        vaccinationSlotAvailable = false;
+                    }
+                    else
+                    {
+                        centersFound = temp.Count;
+                        vaccinationSlotAvailable = true;
+                    }
+                   
                     Centers = temp;
                     searchingCompleted = true;
                 }
