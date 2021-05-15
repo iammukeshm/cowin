@@ -3,7 +3,7 @@
 <MudText Typo="Typo.caption" Color="Color.Primary">Fight Against COVID-19.</MudText>
 <MudText Color="Color.Surface" Class="mb-4">Once you find a prefferable slot for vaccines, head over to the <MudLink Href="https://www.cowin.gov.in/" Target="_blank">cowin portal</MudLink> to book the slots. Note that the application uses data from the Official Indian cowin Public API.</MudText>
 <MudGrid>
-    <MudTabs Outlined="true" Centered="true" Elevation=2 ApplyEffectsToContainer="true" PanelClass="pa-6" TabPanelClass ="customcc">
+    <MudTabs Outlined="false" Centered="true" Style="width:inherit" Elevation=25 ApplyEffectsToContainer="true" PanelClass="pa-6" TabPanelClass ="customcc">
         <MudTabPanel Text="Search By District" OnClick="ResetAsync" Icon="@Icons.Material.Filled.PushPin">
             <MudItem xs="12" md="12">
                 <MudCard Elevation="25">
@@ -29,15 +29,15 @@
                 </MudCard>
             </MudItem>
         </MudTabPanel>
-        <MudTabPanel Text="Search By PIN" OnClick="ResetAsync" Icon="@Icons.Material.Filled.FiberPin">
+        <MudTabPanel Text="Search By PIN"  OnClick="ResetAsync" Icon="@Icons.Material.Filled.FiberPin">
             <MudItem xs="12" md="12">
                 <MudCard Elevation="25">
                     <MudCardContent Class="pa-46" Style="padding:26px!important">
                         <MudGrid>
-                            <MudItem xs="12" md="3">
-                               <MudTextField FullWidth="true" @bind-Value="ZipCode"  Label="Enter ZIP" Variant="Variant.Text" ></MudTextField> 
+                            <MudItem xs="12" md="6">
+                               <MudTextField FullWidth="true" @bind-Value="ZipCode"  Label="Enter ZIP" Variant="Variant.Outlined" ></MudTextField> 
                             </MudItem>
-                            <MudItem Style="align-self:center" xs="12" md="3">
+                            <MudItem Style="align-self:center" xs="12" md="6">
                                 <div class="justify-center mud-text-align-center">
                                     <MudButton Variant="Variant.Filled" Size="Size.Large" OnClick="SearchForAvailableVaccinesZipAsync" Color="Color.Secondary">Search</MudButton>
                                     <MudButton Variant="Variant.Filled" Size="Size.Large" OnClick="ResetAsync" Color="Color.Info">Reset</MudButton>
