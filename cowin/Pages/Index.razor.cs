@@ -112,7 +112,7 @@ namespace cowin.Pages
                     var data = await response.Deserialize<CalendarByDistrictEndpointResponse>();
                     if (data.centers.Count == 0)
                     {
-                        _snackBar.Add("No Centers Found");
+                        _snackBar.Add("No Centers Found!", Severity.Error);
                         searchingCompleted = false;
                         Centers.Clear();
                     }
@@ -125,6 +125,11 @@ namespace cowin.Pages
                     _snackBar.Add("Search result is from " + date.Value.ToString("dd-MM-yyyy") + " to " + date.Value.AddDays(6).ToString("dd-MM-yyyy"), Severity.Info);
                 }
             }
+        }
+        private string GetAgeGroup(int minAge)
+        {
+            if (minAge == 45) return "45+";
+            else return "18+";
         }
         private async Task SearchForAvailableVaccinesZipAsync()
         {
@@ -149,7 +154,7 @@ namespace cowin.Pages
                     var data = await response.Deserialize<CalendarByDistrictEndpointResponse>();
                     if (data.centers.Count == 0)
                     {
-                        _snackBar.Add("No Centers Found");
+                        _snackBar.Add("No Centers Found!",Severity.Error);
                         searchingCompleted = false;
                         Centers.Clear();
                     }
@@ -157,7 +162,7 @@ namespace cowin.Pages
                     {
                         var allCentres = data.centers.Count;
                         var centers = data.centers;
-                        SetCenters(allCentres, centers);
+                        SetCenters(allCentres, centers);                       
                     }
                     _snackBar.Add("Search result is from " + date.Value.ToString("dd-MM-yyyy") + " to " + date.Value.AddDays(6).ToString("dd-MM-yyyy"), Severity.Info);
                 }
