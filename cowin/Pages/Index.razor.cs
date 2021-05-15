@@ -16,6 +16,8 @@ namespace cowin.Pages
         public State SelectedState { get; set; } = new();
         [Parameter]
         public District SelectedDistrict { get; set; } = new();
+        [Parameter]
+        public int? ZipCode { get; set; } = null;
         public List<State> States { get; set; } = new();
         public List<District> Districts { get; set; } = new();
         [Parameter]
@@ -42,6 +44,7 @@ namespace cowin.Pages
             searchingCompleted = false;
             await FetchPublicReport();
             Centers = new();
+            ZipCode = null;
 
         }
         private async Task<IEnumerable<State>> SearchStates(string value)
@@ -116,30 +119,72 @@ namespace cowin.Pages
                     else
                     {
                         var allCentres = data.centers.Count;
-                        var temp = data.centers;
-                        //temp.RemoveAll(a => a.sessions.Any(a => a.available_capacity == 0));
-                        foreach (Center center in temp.ToList())
-                        {
-                            center.sessions.RemoveAll(x => !(x.date.Equals(customDate)));
-                            if (center.sessions.Sum(a => a.available_capacity) == 0)
-                                temp.Remove(center);
-                        }
-                        if (temp.Count == 0)
-                        {
-                            centersFound = allCentres;
-                            vaccinationSlotAvailable = false;
-                        }
-                        else
-                        {
-                            centersFound = temp.Count;
-                            vaccinationSlotAvailable = true;
-                        }
-
-                        Centers = temp;
-                        searchingCompleted = true;
+                        var centers = data.centers;
+                        SetCenters(allCentres, centers);
                     }
+                    _snackBar.Add("Search result is from " + date.Value.ToString("dd-MM-yyyy") + " to " + date.Value.AddDays(6).ToString("dd-MM-yyyy"), Severity.Info);
                 }
             }
+        }
+        private async Task SearchForAvailableVaccinesZipAsync()
+        {
+            if (ZipCode == null)
+            {
+                _snackBar.Add("please enter a ZIP code", Severity.Error);
+                return;
+            }
+            else if(this.ZipCode.ToString().Length > 6 && this.ZipCode.ToString().Length == 0)
+            {
+                _snackBar.Add("Enter a valid ZIP code", Severity.Error);
+                return;
+            }
+            else
+            {
+                await FetchPublicReport(SelectedState.state_id, SelectedDistrict.district_id);
+                string customDate = date.HasValue ? date.Value.ToString("dd-MM-yyyy") : string.Empty;
+                var appointmentEndpoint = $"api/v2/appointment/sessions/public/calendarByPin?pincode={ZipCode}&date={customDate}";
+                var response = await _httpClient.GetAsync(appointmentEndpoint);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Deserialize<CalendarByDistrictEndpointResponse>();
+                    if (data.centers.Count == 0)
+                    {
+                        _snackBar.Add("No Centers Found");
+                        searchingCompleted = false;
+                        Centers.Clear();
+                    }
+                    else
+                    {
+                        var allCentres = data.centers.Count;
+                        var centers = data.centers;
+                        SetCenters(allCentres, centers);
+                    }
+                    _snackBar.Add("Search result is from " + date.Value.ToString("dd-MM-yyyy") + " to " + date.Value.AddDays(6).ToString("dd-MM-yyyy"), Severity.Info);
+                }
+            }
+        }
+        public void SetCenters(int allCentres,List<Center> centers)
+        {
+            //temp.RemoveAll(a => a.sessions.Any(a => a.available_capacity == 0));
+            foreach (Center center in centers.ToList())
+            {
+                //center.sessions.RemoveAll(x => !(x.date.Equals(customDate)));
+                if (center.sessions.Sum(a => a.available_capacity) == 0)
+                    centers.Remove(center);
+            }
+            if (centers.Count == 0)
+            {
+                centersFound = allCentres;
+                vaccinationSlotAvailable = false;
+            }
+            else
+            {
+                centersFound = centers.Count;
+                vaccinationSlotAvailable = true;
+            }
+
+            Centers = centers;
+            searchingCompleted = true;
         }
         public Color GetFeeChipColor(string feeType)
         {
@@ -149,13 +194,13 @@ namespace cowin.Pages
         }
         public async Task FetchPublicReport(int stateId = 0, int districtId = 0)
         {
-                var publicReportEndpoint = $"api/v1/reports/v2/getPublicReports?state_id={(stateId > 0 ? stateId : string.Empty)}&district_id={(districtId > 0 ? districtId : string.Empty)}&date=";
-                var response = await _httpClient.GetAsync(publicReportEndpoint);
-                if (response.IsSuccessStatusCode)
-                {
+           var publicReportEndpoint = $"api/v1/reports/v2/getPublicReports?state_id={(stateId > 0 ? stateId : string.Empty)}&district_id={(districtId > 0 ? districtId : string.Empty)}&date=";
+           var response = await _httpClient.GetAsync(publicReportEndpoint);
+           if (response.IsSuccessStatusCode)
+           {
                     var data = await response.Deserialize<PublicReportEndpointResponse>();
                     PublicReportData = data.topBlock;
-                }
+           }
         }
     }
 }
